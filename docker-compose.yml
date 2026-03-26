@@ -1,0 +1,41 @@
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        UID: ${UID:-1000}
+        GID: ${GID:-1000}
+    container_name: csv-sales-report-app-app
+    working_dir: /var/www
+    volumes:
+      - ./:/var/www
+    networks:
+      - csv-sales-report-app
+
+  nginx:
+    image: nginx:1.27-alpine
+    container_name: csv-sales-report-app-nginx
+    ports:
+      - "8000:80"
+    volumes:
+      - ./:/var/www
+      - ./docker/nginx/default.conf:/etc/nginx/conf.d/default.conf
+    depends_on:
+      - app
+    networks:
+      - csv-sales-report-app
+
+  npm:
+    image: node:22-alpine
+    container_name: csv-sales-report-app-npm
+    working_dir: /var/www
+    user: "${UID:-1000}:${GID:-1000}"
+    volumes:
+      - ./:/var/www
+    networks:
+      - csv-sales-report-app
+
+networks:
+  csv-sales-report-app:
+    driver: bridge
